@@ -44,4 +44,20 @@ public class UserTests
         var act = () => User.Create("a@b.com", hash!);
         act.Should().Throw<DomainException>().WithMessage("*password*");
     }
+
+    [Fact]
+    public void Create_SetsCreatedAtToUtcNow()
+    {
+        var before = DateTime.UtcNow.AddSeconds(-1);
+        var user = User.Create("a@b.com", "h");
+        user.CreatedAt.Kind.Should().Be(DateTimeKind.Utc);
+        user.CreatedAt.Should().BeOnOrAfter(before);
+    }
+
+    [Fact]
+    public void Hydrate_WithInvalidEmail_ShouldThrow()
+    {
+        var act = () => User.Hydrate(Guid.NewGuid(), "bad", "h", DateTime.UtcNow);
+        act.Should().Throw<DomainException>();
+    }
 }

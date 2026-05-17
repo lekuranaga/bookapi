@@ -5,11 +5,12 @@ namespace BookTracker.Domain.Entities;
 
 public sealed class User
 {
+    // Pragmatic email check, not RFC 5322. Real validation happens at delivery time.
     private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
 
     public Guid Id { get; }
     public string Email { get; }
-    public string PasswordHash { get; private set; }
+    public string PasswordHash { get; }
     public DateTime CreatedAt { get; }
 
     private User(Guid id, string email, string passwordHash, DateTime createdAt)
@@ -22,14 +23,21 @@ public sealed class User
 
     public static User Create(string email, string passwordHash)
     {
-        if (string.IsNullOrWhiteSpace(email) || !EmailRegex.IsMatch(email))
-            throw new DomainException("Invalid email.");
-        if (string.IsNullOrWhiteSpace(passwordHash))
-            throw new DomainException("password hash is required.");
-
+        Validate(email, passwordHash);
         return new User(Guid.NewGuid(), email.Trim().ToLowerInvariant(), passwordHash, DateTime.UtcNow);
     }
 
     public static User Hydrate(Guid id, string email, string passwordHash, DateTime createdAt)
-        => new(id, email, passwordHash, createdAt);
+    {
+        Validate(email, passwordHash);
+        return new User(id, email, passwordHash, createdAt);
+    }
+
+    private static void Validate(string email, string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(email) || !EmailRegex.IsMatch(email))
+            throw new DomainException("Invalid email.");
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new DomainException("password hash is required.");
+    }
 }

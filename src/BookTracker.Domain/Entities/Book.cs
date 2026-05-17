@@ -27,7 +27,7 @@ public sealed class Book
         UpdatedAt = updatedAt;
     }
 
-    public static Book Create(string title, string author, int rating, string review, Guid userId, DateOnly readAt)
+    public static Book Create(string title, string author, int rating, string? review, Guid userId, DateOnly readAt)
     {
         Validate(title, author, rating, userId);
         var now = DateTime.UtcNow;
@@ -35,9 +35,12 @@ public sealed class Book
     }
 
     public static Book Hydrate(Guid id, string title, string author, int rating, string review, DateOnly readAt, Guid userId, DateTime createdAt, DateTime updatedAt)
-        => new(id, title, author, rating, review, readAt, userId, createdAt, updatedAt);
+    {
+        Validate(title, author, rating, userId);
+        return new Book(id, title, author, rating, review, readAt, userId, createdAt, updatedAt);
+    }
 
-    public void Update(string title, string author, int rating, string review, DateOnly readAt)
+    public void Update(string title, string author, int rating, string? review, DateOnly readAt)
     {
         Validate(title, author, rating, UserId);
         Title = title.Trim();
