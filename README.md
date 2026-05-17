@@ -6,31 +6,45 @@ Full-stack technical exercise: .NET 10 Web API + Angular 18 SPA + PostgreSQL.
 
 ## Architecture
 
-Clean Architecture, four .NET projects with one-way dependencies:
+Clean Architecture + DDD, four .NET projects with one-way dependencies:
 
 ```
-src/
-├── BookTracker.Domain          → Entities (Book, User), DomainException
-├── BookTracker.Application     → Use cases, abstractions, DTOs, validators
-├── BookTracker.Infrastructure  → ADO.NET repos, BCrypt, JWT, DbUp migrations
-└── BookTracker.Api             → Controllers, JWT auth, Swagger, middleware
-tests/
-└── one xUnit project per src/ project (Domain, App, Infra, Api)
-web/
+backend/
+├── BookTracker.slnx
+├── Directory.Build.props
+├── src/
+│   ├── BookTracker.Domain          → Aggregates, value objects, repository contracts
+│   │   ├── Common/                 — Entity, AggregateRoot, ValueObject, DomainException
+│   │   ├── Users/                  — User (root), Email (VO), IUserRepository
+│   │   └── Books/                  — Book (root), Rating (VO), IBookRepository
+│   ├── BookTracker.Application     → Use cases, app-level abstractions, DTOs, validators
+│   ├── BookTracker.Infrastructure  → ADO.NET repos, BCrypt, JWT, DbUp migrations
+│   └── BookTracker.Api             → Controllers, JWT auth, Swagger, middleware
+└── tests/
+    └── one xUnit project per src/ project (Domain, App, Infra, Api)
+frontend/
 └── Angular 18 standalone SPA (signals, Reactive Forms, Tailwind)
 ```
 
 Dependency rule — `Domain ← Application ← Infrastructure ← Api`. Domain references nothing.
 
-### Notable design choices
+### DDD building blocks
+
+- **Aggregate roots** — `User` and `Book` each own their consistency boundary. Cross-aggregate references are by `Guid`, never by navigation.
+- **Value objects** — `Email` and `Rating` enforce invariants at construction, expose value equality, and are immutable. A `Book` cannot exist with an invalid `Rating`; a `User` cannot exist with an invalid `Email`.
+- **Repository contracts live in Domain** (`Users/IUserRepository.cs`, `Books/IBookRepository.cs`). Infrastructure implements them. Application orchestrates them.
+- **No anemic entities** — `Book.Log`, `Book.Revise`, `User.Register` are intent-revealing factories/methods rather than property setters.
+
+### Other design choices
 
 - **No EF Core / no Dapper / no MediatR** (per exercise constraints). Persistence is raw `NpgsqlCommand` with typed `NpgsqlDbType` parameters. Migrations run via DbUp from embedded SQL scripts.
+- **Primary constructors** (C# 12+) throughout services and use cases — less ceremony, fewer assignments.
 - **Use cases are plain classes** invoked directly from controllers — no mediator pipeline.
 - **Ownership enforced at the repository layer**: every `Book` query and command requires `user_id`. A user cannot read or mutate another user's books.
-- **Domain entities use `Hydrate` factories** that re-validate invariants — corrupt DB rows fail fast at materialization time rather than silently leaking.
+- **Aggregate roots use `Hydrate` factories** that re-validate invariants — corrupt DB rows fail fast at materialization time rather than silently leaking.
 - **JWT bearer auth** with HS256 and a >=32 char signing key. `ICurrentUser` resolves `sub` from the JWT into a `Guid`.
 - **RFC 7807 ProblemDetails** error responses through a single exception middleware (`NotFound`/`Conflict`/`Unauthorized`/`Validation`/`Domain` → corresponding status codes).
-- **FluentValidation** at the API boundary; domain invariants enforced again inside entities (defense in depth).
+- **FluentValidation** at the API boundary; domain invariants enforced again inside aggregates (defense in depth).
 
 ## Stack
 
@@ -59,12 +73,12 @@ Dependency rule — `Domain ← Application ← Infrastructure ← Api`. Domain 
 docker-compose up -d
 
 # 2. run the API (migrations apply on startup, including the demo seed)
-dotnet run --project src/BookTracker.Api
+dotnet run --project backend/src/BookTracker.Api
 #   → API on http://localhost:5000
 #   → Swagger UI on http://localhost:5000/swagger
 
 # 3. in another terminal, run the SPA
-cd web
+cd frontend
 npm install
 npm start
 #   → Angular dev server on http://localhost:4200
@@ -82,7 +96,7 @@ The seed migration inserts the demo user with 2 sample books.
 ## Tests
 
 ```bash
-dotnet test
+cd backend && dotnet test
 ```
 
 - **Domain.Tests** — 29 unit tests, entity invariants
@@ -121,17 +135,18 @@ scaffold → domain (tests + entities) → review fixes
 
 `git log --oneline` makes the progression auditable.
 
-## Repository layout (after build)
+## Repository layout
 
 ```
 .
-├── BookTracker.slnx
-├── Directory.Build.props          # shared TFM, nullable, warnings-as-errors
-├── docker-compose.yml
 ├── README.md
-├── src/                           # 4 .NET projects
-├── tests/                         # 4 xUnit projects, Directory.Build.props relaxes warnings
-└── web/                           # Angular 18 SPA
+├── docker-compose.yml
+├── backend/
+│   ├── BookTracker.slnx
+│   ├── Directory.Build.props      # shared TFM, nullable, warnings-as-errors
+│   ├── src/                       # 4 .NET projects
+│   └── tests/                     # 4 xUnit projects, Directory.Build.props relaxes warnings
+└── frontend/                      # Angular 18 SPA
 ```
 
 ## GenAI tooling — disclosure
