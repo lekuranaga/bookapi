@@ -18,6 +18,7 @@ public sealed class DatabaseMigrator
             .PostgresqlDatabase(_options.ConnectionString)
             .WithScriptsEmbeddedInAssembly(typeof(DatabaseMigrator).Assembly)
             .WithTransactionPerScript()
+            .WithVariablesDisabled()
             .LogToConsole()
             .Build();
 

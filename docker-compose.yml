@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: booktracker-postgres
+    environment:
+      POSTGRES_USER: booktracker
+      POSTGRES_PASSWORD: booktracker
+      POSTGRES_DB: booktracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - booktracker_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booktracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  booktracker_pgdata:
