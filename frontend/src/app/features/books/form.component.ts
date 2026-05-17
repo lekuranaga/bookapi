@@ -10,125 +10,8 @@ import { extractErrorMessage, extractFieldErrors } from '../../core/api/problem-
   selector: 'app-book-form',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, CommonModule],
-  template: `
-    <div class="min-h-screen bg-gray-50">
-      <nav class="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-3">
-        <a routerLink="/books" class="text-gray-400 hover:text-gray-600 transition-colors text-sm">
-          &larr; Books
-        </a>
-        <span class="text-gray-300">/</span>
-        <span class="text-sm font-medium text-gray-900">{{ isEdit ? 'Edit Book' : 'New Book' }}</span>
-      </nav>
-
-      <div class="max-w-lg mx-auto px-6 py-8">
-        <div class="card p-8">
-          <h2 class="text-lg font-semibold text-gray-900 mb-6">{{ isEdit ? 'Edit Book' : 'Add a Book' }}</h2>
-
-          @if (initialLoading()) {
-            <p class="text-sm text-gray-400">Loading...</p>
-          } @else {
-            <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5">
-              <!-- Title -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Title <span class="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  formControlName="title"
-                  class="form-input"
-                  [class.form-input-error]="hasError('title')"
-                  placeholder="Book title"
-                />
-                @if (submitted && form.controls.title.hasError('required')) {
-                  <p class="mt-1 text-xs text-red-600">Title is required.</p>
-                }
-                @for (msg of serverErrors()['title'] ?? []; track msg) {
-                  <p class="mt-1 text-xs text-red-600">{{ msg }}</p>
-                }
-              </div>
-
-              <!-- Author -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Author <span class="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  formControlName="author"
-                  class="form-input"
-                  [class.form-input-error]="hasError('author')"
-                  placeholder="Author name"
-                />
-                @if (submitted && form.controls.author.hasError('required')) {
-                  <p class="mt-1 text-xs text-red-600">Author is required.</p>
-                }
-                @for (msg of serverErrors()['author'] ?? []; track msg) {
-                  <p class="mt-1 text-xs text-red-600">{{ msg }}</p>
-                }
-              </div>
-
-              <!-- Rating -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Rating <span class="text-red-500">*</span></label>
-                <div class="flex gap-2">
-                  @for (n of [1,2,3,4,5]; track n) {
-                    <button
-                      type="button"
-                      (click)="setRating(n)"
-                      class="text-2xl leading-none transition-transform hover:scale-110 focus:outline-none"
-                      [class.text-yellow-400]="n <= form.controls.rating.value"
-                      [class.text-gray-300]="n > form.controls.rating.value"
-                    >&#9733;</button>
-                  }
-                </div>
-                @if (submitted && form.controls.rating.hasError('required')) {
-                  <p class="mt-1 text-xs text-red-600">Rating is required.</p>
-                }
-                @if (submitted && (form.controls.rating.hasError('min') || form.controls.rating.hasError('max'))) {
-                  <p class="mt-1 text-xs text-red-600">Rating must be between 1 and 5.</p>
-                }
-                @for (msg of serverErrors()['rating'] ?? []; track msg) {
-                  <p class="mt-1 text-xs text-red-600">{{ msg }}</p>
-                }
-              </div>
-
-              <!-- Read At -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Date Read</label>
-                <input
-                  type="date"
-                  formControlName="readAt"
-                  class="form-input"
-                  [class.form-input-error]="hasError('readAt')"
-                />
-                @for (msg of serverErrors()['readAt'] ?? []; track msg) {
-                  <p class="mt-1 text-xs text-red-600">{{ msg }}</p>
-                }
-              </div>
-
-              <!-- Review -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Review</label>
-                <textarea
-                  formControlName="review"
-                  class="form-input min-h-[100px] resize-y"
-                  [class.form-input-error]="hasError('review')"
-                  placeholder="Your thoughts..."
-                ></textarea>
-                @for (msg of serverErrors()['review'] ?? []; track msg) {
-                  <p class="mt-1 text-xs text-red-600">{{ msg }}</p>
-                }
-              </div>
-
-              <div class="flex gap-3 pt-2">
-                <button type="submit" class="btn-primary" [disabled]="loading()">
-                  @if (loading()) { Saving... } @else { {{ isEdit ? 'Save changes' : 'Add book' }} }
-                </button>
-                <a routerLink="/books" class="btn-secondary">Cancel</a>
-              </div>
-            </form>
-          }
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './form.component.html',
+  styleUrls: ['./form.component.scss'],
 })
 export class BookFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
@@ -202,9 +85,10 @@ export class BookFormComponent implements OnInit {
       readAt: raw.readAt,
     };
 
-    const request$ = this.isEdit && this.bookId
-      ? this.booksService.update(this.bookId, payload)
-      : this.booksService.create(payload);
+    const request$ =
+      this.isEdit && this.bookId
+        ? this.booksService.update(this.bookId, payload)
+        : this.booksService.create(payload);
 
     request$.subscribe({
       next: () => {
