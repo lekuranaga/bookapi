@@ -1,19 +1,22 @@
 using BookTracker.Application.Abstractions.Security;
-using BookTracker.Application.Auth;
-using BookTracker.Application.Common;
+using BookTracker.Application.Auth.Register;
+using BookTracker.Application.Common.Exceptions;
 using BookTracker.Domain.Users;
 using FluentAssertions;
+using FluentValidation;
+using ValidationException = BookTracker.Application.Common.Exceptions.ValidationException;
 using NSubstitute;
 
 namespace BookTracker.Application.Tests.Auth;
 
 public class RegisterUseCaseTests
 {
+    private readonly IValidator<RegisterRequest> _validator = new RegisterRequestValidator();
     private readonly IUserRepository _users = Substitute.For<IUserRepository>();
     private readonly IPasswordHasher _hasher = Substitute.For<IPasswordHasher>();
     private readonly IJwtTokenGenerator _tokens = Substitute.For<IJwtTokenGenerator>();
 
-    private RegisterUseCase NewSut() => new(_users, _hasher, _tokens);
+    private RegisterUseCase NewSut() => new(_validator, _users, _hasher, _tokens);
 
     [Fact]
     public async Task Execute_NewEmail_CreatesUserAndReturnsToken()
@@ -36,7 +39,7 @@ public class RegisterUseCaseTests
         _hasher.Hash(Arg.Any<string>()).Returns("h");
         _tokens.Generate(Arg.Any<User>()).Returns(new AccessToken("jwt", DateTime.UtcNow));
 
-        await NewSut().ExecuteAsync(new RegisterRequest("  A@B.COM  ", "Passw0rd"), CancellationToken.None);
+        await NewSut().ExecuteAsync(new RegisterRequest("A@B.COM", "Passw0rd"), CancellationToken.None);
 
         await _users.Received().FindByEmailAsync(Arg.Is<Email>(e => e.Value == "a@b.com"), Arg.Any<CancellationToken>());
     }
@@ -51,5 +54,12 @@ public class RegisterUseCaseTests
 
         await act.Should().ThrowAsync<ConflictException>();
         await _users.DidNotReceive().AddAsync(Arg.Any<User>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Execute_WeakPassword_ThrowsValidation()
+    {
+        var act = () => NewSut().ExecuteAsync(new RegisterRequest("a@b.com", "weak"), CancellationToken.None);
+        await act.Should().ThrowAsync<ValidationException>();
     }
 }

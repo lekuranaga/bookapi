@@ -24,7 +24,7 @@ export interface BookPayload {
 @Injectable({ providedIn: 'root' })
 export class BooksService {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiBaseUrl}/api/books`;
+  private readonly base = `${environment.apiBaseUrl}/api/v1/books`;
 
   getAll() {
     return this.http.get<BookDto[]>(this.base);

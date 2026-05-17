@@ -110,15 +110,15 @@ cd backend && dotnet test
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
-| POST | `/api/auth/register` | anon | Create account, returns JWT |
-| POST | `/api/auth/login` | anon | Exchange creds for JWT |
-| GET | `/api/books` | JWT | List current user's books |
-| GET | `/api/books/{id}` | JWT | Get single book (owned) |
-| POST | `/api/books` | JWT | Create book |
-| PUT | `/api/books/{id}` | JWT | Update book (owned) |
-| DELETE | `/api/books/{id}` | JWT | Delete book (owned) |
+| POST | `/api/v1/auth/register` | anon | Create account, returns JWT |
+| POST | `/api/v1/auth/login` | anon | Exchange creds for JWT |
+| GET | `/api/v1/books` | JWT | List current user's books |
+| GET | `/api/v1/books/{id}` | JWT | Get single book (owned) |
+| POST | `/api/v1/books` | JWT | Create book |
+| PUT | `/api/v1/books/{id}` | JWT | Update book (owned) |
+| DELETE | `/api/v1/books/{id}` | JWT | Delete book (owned) |
 
-Swagger UI exposes the full schema with a bearer auth button.
+OpenAPI document at `/openapi/v1.json` and Scalar reference UI at `/scalar/v1`.
 
 ## TDD workflow
 

@@ -1,34 +1,24 @@
-using BookTracker.Api.Validation;
-using BookTracker.Application.Auth;
-using FluentValidation;
+using Asp.Versioning;
+using BookTracker.Application.Auth.Login;
+using BookTracker.Application.Auth.Register;
+using BookTracker.Application.Auth.Shared;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookTracker.Api.Controllers;
 
 [ApiController]
-[Route("api/auth")]
-public sealed class AuthController : ControllerBase
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
+public sealed class AuthController(RegisterUseCase register, LoginUseCase login) : ControllerBase
 {
     [HttpPost("register")]
-    public async Task<ActionResult<AuthResponse>> Register(
-        [FromBody] RegisterRequest request,
-        [FromServices] IValidator<RegisterRequest> validator,
-        [FromServices] RegisterUseCase useCase,
-        CancellationToken ct)
+    public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request, CancellationToken ct)
     {
-        await validator.EnsureValidAsync(request, ct);
-        var response = await useCase.ExecuteAsync(request, ct);
+        var response = await register.ExecuteAsync(request, ct);
         return CreatedAtAction(nameof(Register), response);
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponse>> Login(
-        [FromBody] LoginRequest request,
-        [FromServices] IValidator<LoginRequest> validator,
-        [FromServices] LoginUseCase useCase,
-        CancellationToken ct)
-    {
-        await validator.EnsureValidAsync(request, ct);
-        return Ok(await useCase.ExecuteAsync(request, ct));
-    }
+    public async Task<ActionResult<AuthResponse>> Login(LoginRequest request, CancellationToken ct)
+        => Ok(await login.ExecuteAsync(request, ct));
 }

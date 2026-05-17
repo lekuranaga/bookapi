@@ -11,10 +11,26 @@ public sealed partial class Email : ValueObject
 
     public static Email Create(string raw)
     {
-        if (string.IsNullOrWhiteSpace(raw)) throw new DomainException("Invalid email.");
+        if (!TryCreate(raw, out var email))
+            throw new DomainException("Invalid email.");
+        return email;
+    }
+
+    public static bool TryCreate(string? raw, out Email email)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            email = null!;
+            return false;
+        }
         var normalized = raw.Trim().ToLowerInvariant();
-        if (!EmailRegex().IsMatch(normalized)) throw new DomainException("Invalid email.");
-        return new Email(normalized);
+        if (!EmailRegex().IsMatch(normalized))
+        {
+            email = null!;
+            return false;
+        }
+        email = new Email(normalized);
+        return true;
     }
 
     protected override IEnumerable<object?> GetEqualityComponents() { yield return Value; }

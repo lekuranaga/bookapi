@@ -1,9 +1,9 @@
 using FluentValidation;
-using ValidationException = BookTracker.Application.Common.ValidationException;
+using ValidationException = BookTracker.Application.Common.Exceptions.ValidationException;
 
-namespace BookTracker.Api.Validation;
+namespace BookTracker.Application.Common;
 
-public static class RequestValidator
+public static class ValidatorExtensions
 {
     public static async Task EnsureValidAsync<T>(this IValidator<T> validator, T request, CancellationToken ct)
     {

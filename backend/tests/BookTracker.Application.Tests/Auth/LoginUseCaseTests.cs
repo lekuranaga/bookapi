@@ -1,19 +1,22 @@
 using BookTracker.Application.Abstractions.Security;
-using BookTracker.Application.Auth;
-using BookTracker.Application.Common;
+using BookTracker.Application.Auth.Login;
+using BookTracker.Application.Common.Exceptions;
 using BookTracker.Domain.Users;
 using FluentAssertions;
+using FluentValidation;
+using ValidationException = BookTracker.Application.Common.Exceptions.ValidationException;
 using NSubstitute;
 
 namespace BookTracker.Application.Tests.Auth;
 
 public class LoginUseCaseTests
 {
+    private readonly IValidator<LoginRequest> _validator = new LoginRequestValidator();
     private readonly IUserRepository _users = Substitute.For<IUserRepository>();
     private readonly IPasswordHasher _hasher = Substitute.For<IPasswordHasher>();
     private readonly IJwtTokenGenerator _tokens = Substitute.For<IJwtTokenGenerator>();
 
-    private LoginUseCase NewSut() => new(_users, _hasher, _tokens);
+    private LoginUseCase NewSut() => new(_validator, _users, _hasher, _tokens);
 
     [Fact]
     public async Task Execute_ValidCredentials_ReturnsToken()
@@ -50,9 +53,9 @@ public class LoginUseCaseTests
     }
 
     [Fact]
-    public async Task Execute_MalformedEmail_ThrowsUnauthorized()
+    public async Task Execute_MalformedEmail_ThrowsValidation()
     {
         var act = () => NewSut().ExecuteAsync(new LoginRequest("garbage", "x"), CancellationToken.None);
-        await act.Should().ThrowAsync<UnauthorizedException>();
+        await act.Should().ThrowAsync<ValidationException>();
     }
 }

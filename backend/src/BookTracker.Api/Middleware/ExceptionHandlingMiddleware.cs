@@ -1,5 +1,5 @@
 using System.Text.Json;
-using BookTracker.Application.Common;
+using BookTracker.Application.Common.Exceptions;
 using BookTracker.Domain.Common;
 
 namespace BookTracker.Api.Middleware;

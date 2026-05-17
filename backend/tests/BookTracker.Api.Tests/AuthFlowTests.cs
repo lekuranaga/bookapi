@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
-using BookTracker.Application.Auth;
-using BookTracker.Application.Books;
+using BookTracker.Application.Auth.Login;
+using BookTracker.Application.Auth.Register;
+using BookTracker.Application.Auth.Shared;
+using BookTracker.Application.Books.Create;
+using BookTracker.Application.Books.Shared;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Testcontainers.PostgreSql;
@@ -10,6 +13,9 @@ namespace BookTracker.Api.Tests;
 
 public sealed class AuthFlowTests : IAsyncLifetime
 {
+    private const string AuthBase = "/api/v1/auth";
+    private const string BooksBase = "/api/v1/books";
+
     private readonly PostgreSqlContainer _pg = new PostgreSqlBuilder("postgres:16-alpine").Build();
     private WebApplicationFactory<Program> _factory = null!;
 
@@ -25,7 +31,6 @@ public sealed class AuthFlowTests : IAsyncLifetime
             b.UseSetting("Jwt:Issuer", "BookTracker.Test");
             b.UseSetting("Jwt:Audience", "BookTracker.Test");
         });
-        // force pipeline build so RunMigrationsOnStartup executes
         _ = _factory.CreateClient();
         await Task.CompletedTask;
     }
@@ -42,21 +47,21 @@ public sealed class AuthFlowTests : IAsyncLifetime
         var client = _factory.CreateClient();
         var email = $"u{Guid.NewGuid():N}@x.com";
 
-        var reg = await client.PostAsJsonAsync("/api/auth/register", new RegisterRequest(email, "Passw0rd"));
+        var reg = await client.PostAsJsonAsync($"{AuthBase}/register", new RegisterRequest(email, "Passw0rd"));
         reg.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var login = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest(email, "Passw0rd"));
+        var login = await client.PostAsJsonAsync($"{AuthBase}/login", new LoginRequest(email, "Passw0rd"));
         login.StatusCode.Should().Be(HttpStatusCode.OK);
         var auth = await login.Content.ReadFromJsonAsync<AuthResponse>();
         auth!.AccessToken.Should().NotBeNullOrEmpty();
 
         client.DefaultRequestHeaders.Authorization = new("Bearer", auth.AccessToken);
 
-        var create = await client.PostAsJsonAsync("/api/books",
+        var create = await client.PostAsJsonAsync(BooksBase,
             new CreateBookRequest("Clean Code", "Robert C. Martin", 5, "great", DateOnly.FromDateTime(DateTime.UtcNow)));
         create.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var list = await client.GetFromJsonAsync<List<BookDto>>("/api/books");
+        var list = await client.GetFromJsonAsync<List<BookDto>>(BooksBase);
         list.Should().HaveCount(1);
         list![0].Title.Should().Be("Clean Code");
     }
@@ -65,7 +70,7 @@ public sealed class AuthFlowTests : IAsyncLifetime
     public async Task GetBooks_WithoutToken_Returns401()
     {
         var client = _factory.CreateClient();
-        var resp = await client.GetAsync("/api/books");
+        var resp = await client.GetAsync(BooksBase);
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }

@@ -1,6 +1,6 @@
 using BookTracker.Domain.Books;
 
-namespace BookTracker.Application.Books;
+namespace BookTracker.Application.Books.Shared;
 
 internal static class BookMappings
 {

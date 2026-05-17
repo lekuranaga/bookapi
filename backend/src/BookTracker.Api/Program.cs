@@ -1,4 +1,5 @@
 using System.Text;
+using Asp.Versioning;
 using BookTracker.Api.Auth;
 using BookTracker.Api.Middleware;
 using BookTracker.Application;
@@ -8,76 +9,104 @@ using BookTracker.Infrastructure.Persistence;
 using BookTracker.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
+using Scalar.AspNetCore;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/booktracker-.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14, shared: true)
+    .CreateBootstrapLogger();
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Host.UseSerilog((ctx, services, cfg) => cfg
+        .ReadFrom.Configuration(ctx.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File("logs/booktracker-.log",
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 14,
+            shared: true,
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext} {Message:lj} {Properties:j}{NewLine}{Exception}"));
 
-var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
-          ?? throw new InvalidOperationException("Missing Jwt configuration section.");
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddOpenApi();
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
+    builder.Services.AddApplication();
+    builder.Services.AddInfrastructure(builder.Configuration);
+
+    builder.Services
+        .AddApiVersioning(o =>
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwt.Issuer,
-            ValidAudience = jwt.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
-            ClockSkew = TimeSpan.FromSeconds(30),
-        };
-    });
-builder.Services.AddAuthorization();
+            o.DefaultApiVersion = new ApiVersion(1, 0);
+            o.AssumeDefaultVersionWhenUnspecified = true;
+            o.ReportApiVersions = true;
+        })
+        .AddApiExplorer(o =>
+        {
+            o.GroupNameFormat = "'v'VVV";
+            o.SubstituteApiVersionInUrl = true;
+        });
 
-builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
-    .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? ["http://localhost:4200"])
-    .AllowAnyHeader()
-    .AllowAnyMethod()));
+    var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
+              ?? throw new InvalidOperationException("Missing Jwt configuration section.");
 
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BookTracker API", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwt.Issuer,
+                ValidAudience = jwt.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
+                ClockSkew = TimeSpan.FromSeconds(30),
+            };
+        });
+    builder.Services.AddAuthorization();
+
+    builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
+        .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? ["http://localhost:4200"])
+        .AllowAnyHeader()
+        .AllowAnyMethod()));
+
+    var app = builder.Build();
+
+    if (app.Configuration.GetValue("Database:RunMigrationsOnStartup", false))
     {
-        Name = "Authorization",
-        Description = "Enter: Bearer {token}",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-    c.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
-    {
-        [new OpenApiSecuritySchemeReference("Bearer")] = []
-    });
-});
+        using var scope = app.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<DatabaseMigrator>().Run();
+    }
 
-var app = builder.Build();
+    app.UseSerilogRequestLogging();
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
+    app.MapOpenApi();
+    app.MapScalarApiReference(o => o
+        .WithTitle("BookTracker API")
+        .WithTheme(ScalarTheme.BluePlanet));
+    app.UseCors();
+    app.UseAuthentication();
+    app.UseAuthorization();
+    app.MapControllers();
 
-if (app.Configuration.GetValue("Database:RunMigrationsOnStartup", false))
-{
-    using var scope = app.Services.CreateScope();
-    scope.ServiceProvider.GetRequiredService<DatabaseMigrator>().Run();
+    app.Run();
 }
-
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseSwagger();
-app.UseSwaggerUI();
-app.UseCors();
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
-
-app.Run();
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 public partial class Program;

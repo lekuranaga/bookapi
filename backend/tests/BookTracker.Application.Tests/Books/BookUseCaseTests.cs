@@ -1,14 +1,22 @@
 using BookTracker.Application.Abstractions;
-using BookTracker.Application.Books;
-using BookTracker.Application.Common;
+using BookTracker.Application.Books.Create;
+using BookTracker.Application.Books.Delete;
+using BookTracker.Application.Books.Get;
+using BookTracker.Application.Books.List;
+using BookTracker.Application.Books.Update;
+using BookTracker.Application.Common.Exceptions;
 using BookTracker.Domain.Books;
 using FluentAssertions;
+using FluentValidation;
+using ValidationException = BookTracker.Application.Common.Exceptions.ValidationException;
 using NSubstitute;
 
 namespace BookTracker.Application.Tests.Books;
 
 public class BookUseCaseTests
 {
+    private readonly IValidator<CreateBookRequest> _createValidator = new CreateBookRequestValidator();
+    private readonly IValidator<UpdateBookRequest> _updateValidator = new UpdateBookRequestValidator();
     private readonly IBookRepository _books = Substitute.For<IBookRepository>();
     private readonly ICurrentUser _user = Substitute.For<ICurrentUser>();
     private readonly Guid _uid = Guid.NewGuid();
@@ -23,7 +31,7 @@ public class BookUseCaseTests
     [Fact]
     public async Task Create_PersistsBookOwnedByCurrentUser()
     {
-        var sut = new CreateBookUseCase(_books, _user);
+        var sut = new CreateBookUseCase(_createValidator, _books, _user);
         var dto = await sut.ExecuteAsync(new CreateBookRequest("t", "a", 4, "r", Today), CancellationToken.None);
 
         dto.Title.Should().Be("t");
@@ -32,10 +40,18 @@ public class BookUseCaseTests
     }
 
     [Fact]
+    public async Task Create_InvalidRating_ThrowsValidation()
+    {
+        var sut = new CreateBookUseCase(_createValidator, _books, _user);
+        var act = () => sut.ExecuteAsync(new CreateBookRequest("t", "a", 99, "r", Today), CancellationToken.None);
+        await act.Should().ThrowAsync<ValidationException>();
+    }
+
+    [Fact]
     public async Task Update_NotFound_ThrowsNotFound()
     {
         _books.FindAsync(Arg.Any<Guid>(), _uid, Arg.Any<CancellationToken>()).Returns((Book?)null);
-        var sut = new UpdateBookUseCase(_books, _user);
+        var sut = new UpdateBookUseCase(_updateValidator, _books, _user);
 
         var act = () => sut.ExecuteAsync(Guid.NewGuid(), new UpdateBookRequest("t", "a", 3, "r", Today), CancellationToken.None);
         await act.Should().ThrowAsync<NotFoundException>();
@@ -46,7 +62,7 @@ public class BookUseCaseTests
     {
         var book = Book.Log(_uid, "old", "auth", Rating.Of(2), "rev", Today);
         _books.FindAsync(book.Id, _uid, Arg.Any<CancellationToken>()).Returns(book);
-        var sut = new UpdateBookUseCase(_books, _user);
+        var sut = new UpdateBookUseCase(_updateValidator, _books, _user);
 
         var dto = await sut.ExecuteAsync(book.Id, new UpdateBookRequest("new", "auth2", 5, "rev2", Today), CancellationToken.None);
 
@@ -59,7 +75,7 @@ public class BookUseCaseTests
     public async Task Update_ForeignBook_ThrowsNotFound()
     {
         _books.FindAsync(Arg.Any<Guid>(), _uid, Arg.Any<CancellationToken>()).Returns((Book?)null);
-        var sut = new UpdateBookUseCase(_books, _user);
+        var sut = new UpdateBookUseCase(_updateValidator, _books, _user);
 
         var act = () => sut.ExecuteAsync(Guid.NewGuid(), new UpdateBookRequest("t", "a", 3, "r", Today), CancellationToken.None);
         await act.Should().ThrowAsync<NotFoundException>();

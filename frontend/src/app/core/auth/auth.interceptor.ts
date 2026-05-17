@@ -8,7 +8,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const isAuthEndpoint = req.url.includes('/api/auth/');
+  const isAuthEndpoint = req.url.includes('/api/v1/auth/');
   const token = authService.token();
 
   let authReq = req;

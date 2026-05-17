@@ -1,5 +1,10 @@
-using BookTracker.Application.Auth;
-using BookTracker.Application.Books;
+using BookTracker.Application.Auth.Login;
+using BookTracker.Application.Auth.Register;
+using BookTracker.Application.Books.Create;
+using BookTracker.Application.Books.Delete;
+using BookTracker.Application.Books.Get;
+using BookTracker.Application.Books.List;
+using BookTracker.Application.Books.Update;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
