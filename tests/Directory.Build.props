@@ -3,5 +3,6 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CA1707;CA1062;CA1812;CA2007</NoWarn>
   </PropertyGroup>
 </Project>
