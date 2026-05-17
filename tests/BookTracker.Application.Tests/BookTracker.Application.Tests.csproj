@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BookTracker.Application\BookTracker.Application.csproj" />
+    <ProjectReference Include="..\..\src\BookTracker.Domain\BookTracker.Domain.csproj" />
   </ItemGroup>
 
 </Project>
