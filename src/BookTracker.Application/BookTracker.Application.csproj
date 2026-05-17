@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\BookTracker.Domain\BookTracker.Domain.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\BookTracker.Application\BookTracker.Application.csproj" />
+  </ItemGroup>
+</Project>

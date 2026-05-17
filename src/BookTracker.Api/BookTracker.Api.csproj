@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BookTracker.Infrastructure\BookTracker.Infrastructure.csproj" />
+    <ProjectReference Include="..\BookTracker.Application\BookTracker.Application.csproj" />
+  </ItemGroup>
+
+</Project>

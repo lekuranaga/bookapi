@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BookTracker.Api/BookTracker.Api.csproj" />
+    <Project Path="src/BookTracker.Application/BookTracker.Application.csproj" />
+    <Project Path="src/BookTracker.Domain/BookTracker.Domain.csproj" />
+    <Project Path="src/BookTracker.Infrastructure/BookTracker.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BookTracker.Api.Tests/BookTracker.Api.Tests.csproj" />
+    <Project Path="tests/BookTracker.Application.Tests/BookTracker.Application.Tests.csproj" />
+    <Project Path="tests/BookTracker.Domain.Tests/BookTracker.Domain.Tests.csproj" />
+    <Project Path="tests/BookTracker.Infrastructure.Tests/BookTracker.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

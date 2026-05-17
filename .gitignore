@@ -1,0 +1,25 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+*.swp
+TestResults/
+coverage*/
+
+## Node / Angular
+web/node_modules/
+web/dist/
+web/.angular/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Env
+.env
+.env.local
+*.local
