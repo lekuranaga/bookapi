@@ -91,7 +91,66 @@ email:    demo@demo.com
 password: Demo@123
 ```
 
-The seed migration inserts the demo user with 2 sample books.
+Three seed migrations run on boot (`0001_init.sql`, `0002_seed_demo.sql`, `0003_seed_more_books.sql`):
+- Demo user `demo@demo.com` / `Demo@123`.
+- 7 pre-seeded books in their library — Clean Code, The Pragmatic Programmer, Domain-Driven Design, Refactoring, The Mythical Man-Month, Designing Data-Intensive Applications, Working Effectively with Legacy Code.
+
+## Screens
+
+> All 4 screenshots live in `docs/screenshots/`. They were captured headless via Puppeteer-core driving real Chrome against the running stack — no Photoshop.
+
+### Login — `/login`
+
+![Login](docs/screenshots/01-login.png)
+
+Centered card on the brand background. Teal accent bar at the top (design system Level-2 elevation). Email + password with the seed creds work out of the box.
+
+### Register — `/register`
+
+![Register](docs/screenshots/02-register.png)
+
+Same layout language as Login. Password policy enforced by `RegisterRequestValidator` (>= 8 chars, upper + lower + digit) — server returns RFC 7807 field errors which Angular displays inline.
+
+### Books list / Dashboard — `/books` (auth required)
+
+![Dashboard](docs/screenshots/03-dashboard.png)
+
+Three-column card grid at desktop (collapses to 2 / 1 on tablet / mobile). Literata serif for titles, Inter sans for everything else. Teal left-border accent + Level-2 shadow that lifts to Level-3 on hover.
+
+### Add / Edit book — `/books/new` and `/books/:id/edit`
+
+![New Book](docs/screenshots/04-new-book.png)
+
+Reactive form. Star-rating widget binds to a numeric `Rating` control (1–5). `readAt` is a `<input type="date">` so the browser provides the picker. Server-side validation errors land back in the same fields with red text via the ProblemDetails `errors` map.
+
+## Demo flow — manual click-through
+
+A guided ~2-minute tour you can use during the live demo:
+
+1. **Visit `http://localhost:4200`** → guard kicks in → redirects to `/login`.
+2. **Log in** with `demo@demo.com` / `Demo@123`. You'll land on the dashboard with 7 seeded books.
+3. **Try sorting / inspecting**: hover any card — shadow lifts. Note the Literata serif on titles, teal stars.
+4. **Create a new book** — click **+ New Book**. Sample data to type during the demo:
+
+   | Title | Author | Rating | Read date | Review |
+   | --- | --- | --- | --- | --- |
+   | The Phoenix Project | Gene Kim, Kevin Behr, George Spafford | 5 | today | "DevOps story disguised as a novel." |
+   | Accelerate | Forsgren, Humble, Kim | 4 | yesterday | "DORA metrics origin." |
+   | Building Microservices | Sam Newman | 4 | 2026-04-01 | "Pragmatic guide." |
+   | Site Reliability Engineering | Beyer et al. | 5 | 2026-03-15 | "Google's SRE bible." |
+
+5. **Edit** — click **Edit** on any card. Form pre-fills via `GetBookUseCase`. Change the rating → **Save**. Card reflects new rating immediately.
+6. **Delete** — click **Delete** on a created book. Confirm. Card disappears (optimistic UI, then server `DELETE`).
+7. **Open Scalar UI** at `http://localhost:5184/scalar/v1` — auth dropdown takes the same JWT from `localStorage.bt_session.token`.
+8. **Open the Bruno collection** (`backend/bruno`) for an alternative API client view with the full CRUD flow scripted.
+9. **Sign out** — top-right. Session cleared from `localStorage`, guard kicks back to `/login`.
+
+### Negative paths worth showing
+
+- Wrong password on login → red toast: "Invalid credentials." (no leak of whether email exists).
+- Empty title on create → inline field error from FluentValidation.
+- Try to access `/books` without logging in → silent redirect to `/login`.
+- Hit any authenticated endpoint with a stale token → 401 → interceptor clears session + redirects.
 
 ## Tests
 

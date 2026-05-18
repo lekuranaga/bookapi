@@ -88,12 +88,12 @@ try
     }
 
     app.UseSerilogRequestLogging();
+    app.UseCors();
     app.UseMiddleware<ExceptionHandlingMiddleware>();
     app.MapOpenApi();
     app.MapScalarApiReference(o => o
         .WithTitle("BookTracker API")
         .WithTheme(ScalarTheme.BluePlanet));
-    app.UseCors();
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
