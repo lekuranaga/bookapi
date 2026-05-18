@@ -1,0 +1,40 @@
+meta {
+  name: Create
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/{{apiVersion}}/books
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "title": "Domain-Driven Design",
+    "author": "Eric Evans",
+    "rating": 5,
+    "review": "Foundational vocabulary for modeling complex domains.",
+    "readAt": "2026-05-10"
+  }
+}
+
+script:post-response {
+  if (res.status === 201 && res.body && res.body.id) {
+    bru.setEnvVar("lastBookId", res.body.id);
+  }
+}
+
+tests {
+  test("status 201", function () {
+    expect(res.status).to.equal(201);
+  });
+  test("returns created book id", function () {
+    expect(res.body.id).to.be.a("string");
+  });
+}

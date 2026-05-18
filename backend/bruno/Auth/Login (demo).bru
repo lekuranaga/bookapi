@@ -1,0 +1,33 @@
+meta {
+  name: Login (demo)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/{{apiVersion}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{demoEmail}}",
+    "password": "{{demoPassword}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body && res.body.accessToken) {
+    bru.setEnvVar("token", res.body.accessToken);
+  }
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.status).to.equal(200);
+  });
+  test("captures token", function () {
+    expect(res.body.accessToken).to.be.a("string");
+  });
+}

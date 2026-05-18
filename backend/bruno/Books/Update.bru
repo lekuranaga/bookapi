@@ -1,0 +1,31 @@
+meta {
+  name: Update
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/{{apiVersion}}/books/{{lastBookId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "title": "Domain-Driven Design (revised)",
+    "author": "Eric Evans",
+    "rating": 4,
+    "review": "Re-reading. Still relevant.",
+    "readAt": "2026-05-15"
+  }
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.status).to.equal(200);
+  });
+}
