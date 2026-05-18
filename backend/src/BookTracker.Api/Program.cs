@@ -126,4 +126,5 @@ finally
     Log.CloseAndFlush();
 }
 
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 public partial class Program;
