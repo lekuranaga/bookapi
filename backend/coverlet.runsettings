@@ -5,7 +5,8 @@
       <DataCollector friendlyName="XPlat code coverage">
         <Configuration>
           <Format>cobertura</Format>
-          <Exclude>[*]Microsoft.AspNetCore.OpenApi.Generated.*,[*]System.Text.RegularExpressions.Generated.*,[*]System.Runtime.CompilerServices.*</Exclude>
+          <Include>[BookTracker.*]*</Include>
+          <Exclude>[*]Microsoft.AspNetCore.OpenApi.Generated.*,[*]System.Text.RegularExpressions.Generated.*,[*]System.Runtime.CompilerServices.*,[BookTracker.*.Tests]*</Exclude>
           <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
           <ExcludeByFile>**/Migrations/*.sql,**/Program.cs</ExcludeByFile>
           <SkipAutoProps>true</SkipAutoProps>
