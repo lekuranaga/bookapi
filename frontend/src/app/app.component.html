@@ -3,10 +3,8 @@
     <div
       class="flex items-center justify-between px-stack-md md:px-gutter h-16 max-w-[1280px] mx-auto"
     >
-      <!-- Logo -->
       <span class="headline-md text-primary select-none">BookTracker</span>
 
-      <!-- User menu -->
       <div class="flex items-center gap-stack-md">
         <span class="body-md text-secondary hidden sm:block">{{ authService.user()?.email }}</span>
         <button (click)="authService.logout()" class="btn-secondary text-xs px-3 py-1.5">
@@ -16,7 +14,6 @@
     </div>
   </header>
 
-  <!-- Push content below fixed nav -->
   <div class="pt-16">
     <router-outlet />
   </div>

@@ -1,6 +1,5 @@
 <div class="min-h-screen bg-background">
   <div class="max-w-[640px] mx-auto px-stack-md md:px-gutter py-stack-lg">
-    <!-- Breadcrumb -->
     <nav class="flex items-center gap-2 mb-stack-lg">
       <a
         routerLink="/books"
@@ -14,7 +13,6 @@
       }}</span>
     </nav>
 
-    <!-- Form card with teal left accent -->
     <div
       class="bg-surface rounded-lg border border-border border-l-4 border-l-on-tertiary-container shadow-level-2 p-8"
     >
@@ -26,7 +24,6 @@
         <p class="body-md text-secondary">Loading...</p>
       } @else {
         <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-stack-md">
-          <!-- Title -->
           <div>
             <label for="book-title" class="label-md text-secondary block mb-1">
               Title <span class="text-error">*</span>
@@ -47,7 +44,6 @@
             }
           </div>
 
-          <!-- Author -->
           <div>
             <label for="book-author" class="label-md text-secondary block mb-1">
               Author <span class="text-error">*</span>
@@ -68,7 +64,6 @@
             }
           </div>
 
-          <!-- Rating -->
           <div>
             <label for="book-rating" class="label-md text-secondary block mb-2">
               Rating <span class="text-error">*</span>
@@ -100,7 +95,6 @@
             }
           </div>
 
-          <!-- Date Read -->
           <div>
             <label for="book-readAt" class="label-md text-secondary block mb-1">Date Read</label>
             <input
@@ -115,7 +109,6 @@
             }
           </div>
 
-          <!-- Review -->
           <div>
             <label for="book-review" class="label-md text-secondary block mb-1">Review</label>
             <textarea
@@ -130,7 +123,6 @@
             }
           </div>
 
-          <!-- Actions -->
           <div class="flex gap-3 pt-stack-sm border-t border-border">
             <button type="submit" class="btn-primary" [disabled]="loading()">
               @if (loading()) {

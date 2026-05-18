@@ -40,13 +40,13 @@ export class AuthService {
   login(email: string, password: string) {
     return this.http
       .post<AuthResponse>(`${environment.apiBaseUrl}/api/v1/auth/login`, { email, password })
-      .pipe(tap(res => this.persist(res)));
+      .pipe(tap((res) => this.persist(res)));
   }
 
   register(email: string, password: string) {
     return this.http
       .post<AuthResponse>(`${environment.apiBaseUrl}/api/v1/auth/register`, { email, password })
-      .pipe(tap(res => this.persist(res)));
+      .pipe(tap((res) => this.persist(res)));
   }
 
   logout() {
