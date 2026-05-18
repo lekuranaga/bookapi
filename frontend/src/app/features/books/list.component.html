@@ -1,73 +1,73 @@
-<div class="min-h-screen bg-gray-50">
-  <!-- Nav -->
-  <nav class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-    <span class="text-lg font-bold text-gray-900">BookTracker</span>
-    <div class="flex items-center gap-4">
-      <span class="text-sm text-gray-500">{{ authService.user()?.email }}</span>
-      <button (click)="authService.logout()" class="btn-secondary text-xs px-3 py-1.5">
-        Sign out
-      </button>
-    </div>
-  </nav>
-
-  <div class="max-w-5xl mx-auto px-6 py-8">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-semibold text-gray-900">My Books</h2>
-      <a routerLink="/books/new" class="btn-primary">+ New Book</a>
+<div class="min-h-screen bg-background">
+  <div class="max-w-[1280px] mx-auto px-stack-md md:px-gutter py-stack-lg">
+    <!-- Page header -->
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-stack-md mb-stack-lg">
+      <div>
+        <h2 class="headline-md text-on-surface">Reading Journey</h2>
+        <p class="body-md text-secondary mt-1">A curated view of your literary progress</p>
+      </div>
+      <a routerLink="/books/new" class="btn-teal self-start sm:self-auto"> + New Book </a>
     </div>
 
     @if (loading()) {
-      <div class="card p-8 text-center text-gray-400 text-sm">Loading books...</div>
+      <div class="card p-12 text-center body-md text-secondary">Loading books...</div>
     } @else if (books().length === 0) {
       <div class="card p-12 text-center">
-        <p class="text-gray-400 text-sm">No books yet. Add your first read!</p>
-        <a routerLink="/books/new" class="btn-primary mt-4 inline-block">Add a book</a>
+        <p class="body-md text-secondary mb-stack-md">No books yet. Add your first read!</p>
+        <a routerLink="/books/new" class="btn-teal inline-block">Add a book</a>
       </div>
     } @else {
-      <div class="card overflow-hidden">
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th class="px-4 py-3 text-left font-medium text-gray-600">Title</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600">Author</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600">Rating</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600">Read on</th>
-              <th class="px-4 py-3 text-right font-medium text-gray-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            @for (book of books(); track book.id) {
-              <tr class="hover:bg-gray-50 transition-colors">
-                <td class="px-4 py-3 font-medium text-gray-900">{{ book.title }}</td>
-                <td class="px-4 py-3 text-gray-600">{{ book.author }}</td>
-                <td class="px-4 py-3">
-                  <span class="text-yellow-500 tracking-tighter">{{ stars(book.rating) }}</span>
-                  <span class="text-gray-300 tracking-tighter">{{ emptyStars(book.rating) }}</span>
-                </td>
-                <td class="px-4 py-3 text-gray-500">{{ formatDate(book.readAt) }}</td>
-                <td class="px-4 py-3 text-right flex justify-end gap-2">
-                  <a
-                    [routerLink]="['/books', book.id, 'edit']"
-                    class="btn-secondary text-xs px-3 py-1.5"
-                  >
-                    Edit
-                  </a>
-                  <button
-                    (click)="confirmDelete(book)"
-                    class="btn-danger text-xs px-3 py-1.5"
-                    [disabled]="deletingId() === book.id"
-                  >
-                    @if (deletingId() === book.id) {
-                      Deleting...
-                    } @else {
-                      Delete
-                    }
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+      <!-- Book grid: 1 col mobile → 2 tablet → 3 desktop -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter">
+        @for (book of books(); track book.id) {
+          <div
+            class="group bg-surface rounded-lg border border-border shadow-level-2 hover:shadow-level-3 hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col border-l-4 border-l-on-tertiary-container"
+          >
+            <!-- Card body -->
+            <div class="p-6 flex flex-col flex-1">
+              <!-- Stars -->
+              <div class="flex gap-0.5 mb-stack-sm text-on-tertiary-container">
+                @for (n of [1, 2, 3, 4, 5]; track n) {
+                  <span class="text-lg leading-none">{{ n <= book.rating ? '★' : '☆' }}</span>
+                }
+              </div>
+
+              <!-- Title (Literata) -->
+              <h3 class="book-title-card text-on-surface mb-1 line-clamp-2">{{ book.title }}</h3>
+
+              <!-- Author (Inter) -->
+              <p class="body-md text-secondary mb-stack-md">{{ book.author }}</p>
+
+              <!-- Date read -->
+              @if (book.readAt) {
+                <p class="label-md text-outline mt-auto mb-stack-md">
+                  Read {{ formatDate(book.readAt) }}
+                </p>
+              }
+
+              <!-- Actions -->
+              <div class="flex gap-2 mt-auto pt-stack-md border-t border-border">
+                <a
+                  [routerLink]="['/books', book.id, 'edit']"
+                  class="btn-secondary text-xs px-3 py-1.5 flex-1 text-center"
+                >
+                  Edit
+                </a>
+                <button
+                  (click)="confirmDelete(book)"
+                  class="btn-danger text-xs px-3 py-1.5 flex-1"
+                  [disabled]="deletingId() === book.id"
+                >
+                  @if (deletingId() === book.id) {
+                    Deleting...
+                  } @else {
+                    Delete
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        }
       </div>
     }
   </div>

@@ -1,26 +1,35 @@
-<div class="min-h-screen bg-gray-50">
-  <nav class="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-3">
-    <a routerLink="/books" class="text-gray-400 hover:text-gray-600 transition-colors text-sm">
-      &larr; Books
-    </a>
-    <span class="text-gray-300">/</span>
-    <span class="text-sm font-medium text-gray-900">{{ isEdit ? 'Edit Book' : 'New Book' }}</span>
-  </nav>
+<div class="min-h-screen bg-background">
+  <div class="max-w-[640px] mx-auto px-stack-md md:px-gutter py-stack-lg">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 mb-stack-lg">
+      <a
+        routerLink="/books"
+        class="label-md text-secondary hover:text-on-surface transition-colors"
+      >
+        &larr; Books
+      </a>
+      <span class="text-outline">/</span>
+      <span class="label-md text-on-surface font-medium">{{
+        isEdit ? 'Edit Book' : 'New Book'
+      }}</span>
+    </nav>
 
-  <div class="max-w-lg mx-auto px-6 py-8">
-    <div class="card p-8">
-      <h2 class="text-lg font-semibold text-gray-900 mb-6">
+    <!-- Form card with teal left accent -->
+    <div
+      class="bg-surface rounded-lg border border-border border-l-4 border-l-on-tertiary-container shadow-level-2 p-8"
+    >
+      <h2 class="headline-md text-on-surface mb-stack-lg">
         {{ isEdit ? 'Edit Book' : 'Add a Book' }}
       </h2>
 
       @if (initialLoading()) {
-        <p class="text-sm text-gray-400">Loading...</p>
+        <p class="body-md text-secondary">Loading...</p>
       } @else {
-        <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5">
+        <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-stack-md">
           <!-- Title -->
           <div>
-            <label for="book-title" class="block text-sm font-medium text-gray-700 mb-1">
-              Title <span class="text-red-500">*</span>
+            <label for="book-title" class="label-md text-secondary block mb-1">
+              Title <span class="text-error">*</span>
             </label>
             <input
               id="book-title"
@@ -31,17 +40,17 @@
               placeholder="Book title"
             />
             @if (submitted && form.controls.title.hasError('required')) {
-              <p class="mt-1 text-xs text-red-600">Title is required.</p>
+              <p class="mt-1 text-xs text-error">Title is required.</p>
             }
             @for (msg of serverErrors()['title'] ?? []; track msg) {
-              <p class="mt-1 text-xs text-red-600">{{ msg }}</p>
+              <p class="mt-1 text-xs text-error">{{ msg }}</p>
             }
           </div>
 
           <!-- Author -->
           <div>
-            <label for="book-author" class="block text-sm font-medium text-gray-700 mb-1">
-              Author <span class="text-red-500">*</span>
+            <label for="book-author" class="label-md text-secondary block mb-1">
+              Author <span class="text-error">*</span>
             </label>
             <input
               id="book-author"
@@ -52,17 +61,17 @@
               placeholder="Author name"
             />
             @if (submitted && form.controls.author.hasError('required')) {
-              <p class="mt-1 text-xs text-red-600">Author is required.</p>
+              <p class="mt-1 text-xs text-error">Author is required.</p>
             }
             @for (msg of serverErrors()['author'] ?? []; track msg) {
-              <p class="mt-1 text-xs text-red-600">{{ msg }}</p>
+              <p class="mt-1 text-xs text-error">{{ msg }}</p>
             }
           </div>
 
           <!-- Rating -->
           <div>
-            <label for="book-rating" class="block text-sm font-medium text-gray-700 mb-1">
-              Rating <span class="text-red-500">*</span>
+            <label for="book-rating" class="label-md text-secondary block mb-2">
+              Rating <span class="text-error">*</span>
             </label>
             <div id="book-rating" class="flex gap-2">
               @for (n of [1, 2, 3, 4, 5]; track n) {
@@ -70,32 +79,30 @@
                   type="button"
                   (click)="setRating(n)"
                   class="text-2xl leading-none transition-transform hover:scale-110 focus:outline-none"
-                  [class.text-yellow-400]="n <= form.controls.rating.value"
-                  [class.text-gray-300]="n > form.controls.rating.value"
+                  [class.text-on-tertiary-container]="n <= form.controls.rating.value"
+                  [class.text-outline-variant]="n > form.controls.rating.value"
                 >
                   &#9733;
                 </button>
               }
             </div>
             @if (submitted && form.controls.rating.hasError('required')) {
-              <p class="mt-1 text-xs text-red-600">Rating is required.</p>
+              <p class="mt-1 text-xs text-error">Rating is required.</p>
             }
             @if (
               submitted &&
               (form.controls.rating.hasError('min') || form.controls.rating.hasError('max'))
             ) {
-              <p class="mt-1 text-xs text-red-600">Rating must be between 1 and 5.</p>
+              <p class="mt-1 text-xs text-error">Rating must be between 1 and 5.</p>
             }
             @for (msg of serverErrors()['rating'] ?? []; track msg) {
-              <p class="mt-1 text-xs text-red-600">{{ msg }}</p>
+              <p class="mt-1 text-xs text-error">{{ msg }}</p>
             }
           </div>
 
-          <!-- Read At -->
+          <!-- Date Read -->
           <div>
-            <label for="book-readAt" class="block text-sm font-medium text-gray-700 mb-1"
-              >Date Read</label
-            >
+            <label for="book-readAt" class="label-md text-secondary block mb-1">Date Read</label>
             <input
               id="book-readAt"
               type="date"
@@ -104,28 +111,27 @@
               [class.form-input-error]="hasError('readAt')"
             />
             @for (msg of serverErrors()['readAt'] ?? []; track msg) {
-              <p class="mt-1 text-xs text-red-600">{{ msg }}</p>
+              <p class="mt-1 text-xs text-error">{{ msg }}</p>
             }
           </div>
 
           <!-- Review -->
           <div>
-            <label for="book-review" class="block text-sm font-medium text-gray-700 mb-1"
-              >Review</label
-            >
+            <label for="book-review" class="label-md text-secondary block mb-1">Review</label>
             <textarea
               id="book-review"
               formControlName="review"
-              class="form-input min-h-[100px] resize-y"
+              class="form-input min-h-[120px] resize-y"
               [class.form-input-error]="hasError('review')"
-              placeholder="Your thoughts..."
+              placeholder="Your thoughts on the book..."
             ></textarea>
             @for (msg of serverErrors()['review'] ?? []; track msg) {
-              <p class="mt-1 text-xs text-red-600">{{ msg }}</p>
+              <p class="mt-1 text-xs text-error">{{ msg }}</p>
             }
           </div>
 
-          <div class="flex gap-3 pt-2">
+          <!-- Actions -->
+          <div class="flex gap-3 pt-stack-sm border-t border-border">
             <button type="submit" class="btn-primary" [disabled]="loading()">
               @if (loading()) {
                 Saving...

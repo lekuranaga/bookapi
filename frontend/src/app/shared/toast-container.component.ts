@@ -15,11 +15,11 @@ export class ToastContainerComponent {
   toastClass(type: string): string {
     switch (type) {
       case 'error':
-        return 'bg-red-600 text-white';
+        return 'bg-error text-on-error';
       case 'success':
-        return 'bg-green-600 text-white';
+        return 'bg-success text-white';
       default:
-        return 'bg-gray-800 text-white';
+        return 'bg-inverse-surface text-inverse-on-surface';
     }
   }
 }

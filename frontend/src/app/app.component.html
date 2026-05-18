@@ -1,2 +1,27 @@
-<router-outlet />
+@if (showNav()) {
+  <header class="bg-surface border-b border-border shadow-level-2 fixed top-0 w-full z-40">
+    <div
+      class="flex items-center justify-between px-stack-md md:px-gutter h-16 max-w-[1280px] mx-auto"
+    >
+      <!-- Logo -->
+      <span class="headline-md text-primary select-none">BookTracker</span>
+
+      <!-- User menu -->
+      <div class="flex items-center gap-stack-md">
+        <span class="body-md text-secondary hidden sm:block">{{ authService.user()?.email }}</span>
+        <button (click)="authService.logout()" class="btn-secondary text-xs px-3 py-1.5">
+          Sign out
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Push content below fixed nav -->
+  <div class="pt-16">
+    <router-outlet />
+  </div>
+} @else {
+  <router-outlet />
+}
+
 <app-toast-container />

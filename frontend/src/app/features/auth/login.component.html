@@ -1,60 +1,95 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-  <div class="card w-full max-w-md p-8">
-    <div class="mb-8 text-center">
-      <h1 class="text-2xl font-bold text-gray-900">BookTracker</h1>
-      <p class="mt-1 text-sm text-gray-500">Sign in to your account</p>
+<div class="min-h-screen flex items-center justify-center bg-background px-stack-md py-stack-lg">
+  <!-- Atmospheric background blobs -->
+  <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+    <div
+      class="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] bg-secondary-container/20 rounded-full blur-[120px]"
+    ></div>
+    <div
+      class="absolute bottom-[-10%] left-[-5%] w-[40%] h-[40%] bg-tertiary-fixed/10 rounded-full blur-[120px]"
+    ></div>
+  </div>
+
+  <main class="w-full max-w-[440px]">
+    <!-- Logo -->
+    <div class="flex flex-col items-center mb-stack-lg">
+      <h1 class="headline-md text-primary">BookTracker</h1>
+      <p class="body-md text-secondary mt-1">Your personal literary sanctuary</p>
     </div>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5">
-      <div>
-        <label for="login-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-        <input
-          id="login-email"
-          type="email"
-          formControlName="email"
-          class="form-input"
-          [class.form-input-error]="submitted && form.controls.email.invalid"
-          placeholder="you@example.com"
-          autocomplete="email"
-        />
-        @if (submitted && form.controls.email.hasError('required')) {
-          <p class="mt-1 text-xs text-red-600">Email is required.</p>
-        }
-        @if (submitted && form.controls.email.hasError('email')) {
-          <p class="mt-1 text-xs text-red-600">Enter a valid email.</p>
-        }
+    <!-- Card -->
+    <div
+      class="bg-surface rounded-lg shadow-level-2 border border-border p-stack-lg relative overflow-hidden"
+    >
+      <!-- Teal accent top bar -->
+      <div class="absolute top-0 left-0 w-full h-[3px] bg-on-tertiary-container"></div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-stack-md">
+        <!-- Email -->
+        <div class="space-y-1">
+          <label for="login-email" class="label-md text-secondary block">Email Address</label>
+          <input
+            id="login-email"
+            type="email"
+            formControlName="email"
+            class="form-input"
+            [class.form-input-error]="submitted && form.controls.email.invalid"
+            placeholder="name@example.com"
+            autocomplete="email"
+          />
+          @if (submitted && form.controls.email.hasError('required')) {
+            <p class="mt-1 text-xs text-error">Email is required.</p>
+          }
+          @if (submitted && form.controls.email.hasError('email')) {
+            <p class="mt-1 text-xs text-error">Enter a valid email.</p>
+          }
+        </div>
+
+        <!-- Password -->
+        <div class="space-y-1">
+          <label for="login-password" class="label-md text-secondary block">Password</label>
+          <input
+            id="login-password"
+            type="password"
+            formControlName="password"
+            class="form-input"
+            [class.form-input-error]="submitted && form.controls.password.invalid"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+          @if (submitted && form.controls.password.hasError('required')) {
+            <p class="mt-1 text-xs text-error">Password is required.</p>
+          }
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-primary w-full h-12 mt-stack-sm" [disabled]="loading()">
+          @if (loading()) {
+            Signing in...
+          } @else {
+            Log in to your library
+          }
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="relative my-stack-lg">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-border"></div>
+        </div>
+        <div class="relative flex justify-center">
+          <span class="bg-surface px-4 label-md text-secondary/60">New here?</span>
+        </div>
       </div>
 
-      <div>
-        <label for="login-password" class="block text-sm font-medium text-gray-700 mb-1"
-          >Password</label
+      <p class="text-center body-md text-secondary">
+        Don't have an account?
+        <a
+          routerLink="/register"
+          class="font-semibold text-on-tertiary-container hover:underline transition-all"
         >
-        <input
-          id="login-password"
-          type="password"
-          formControlName="password"
-          class="form-input"
-          [class.form-input-error]="submitted && form.controls.password.invalid"
-          placeholder="••••••••"
-          autocomplete="current-password"
-        />
-        @if (submitted && form.controls.password.hasError('required')) {
-          <p class="mt-1 text-xs text-red-600">Password is required.</p>
-        }
-      </div>
-
-      <button type="submit" class="btn-primary w-full" [disabled]="loading()">
-        @if (loading()) {
-          Signing in...
-        } @else {
-          Sign in
-        }
-      </button>
-    </form>
-
-    <p class="mt-6 text-center text-sm text-gray-500">
-      No account?
-      <a routerLink="/register" class="text-indigo-600 hover:underline font-medium">Register</a>
-    </p>
-  </div>
+          Create an account
+        </a>
+      </p>
+    </div>
+  </main>
 </div>
