@@ -218,12 +218,28 @@ The Claude Code plugin system lets you install bundles of *skills + agents + com
 4. **Skills enforced TDD discipline** — write a test, run it red, implement, run green, commit. The `superpowers:systematic-debugging` skill kicked in twice (DbUp `$2a$` parsing failure, Microsoft.OpenApi namespace migration).
 5. **RTK saved tokens** on dozens of `git status`, `dotnet test`, `docker ps` calls during the build.
 
+### Design system — generated with Stitch
+
+The frontend visual language was not hand-designed. I used [**Stitch (Design with AI)**](https://stitch.withgoogle.com/) — Google's AI design tool — to generate:
+
+- A **BookTracker Design System** artifact (`DESIGN.md`): full color palette (surface/primary/secondary/tertiary slate-navy + teal accent), dual-font strategy (Literata serif for book titles, Inter sans for UI), spacing/radius scales, elevation tokens, and component conventions.
+- Three screen mockups: **Login**, **Dashboard**, **Detalhes do Livro**, each delivered as a `code.html` + `screen.png` pair.
+
+The Stitch artifacts live outside this repo. They were the *source of truth* for the visual layer; my job was translating them into the Angular implementation:
+
+- Design tokens → `tailwind.config.js` (`bg-surface`, `text-on-surface`, `border-outline`, `bg-tertiary`, etc.).
+- Typography → Google Fonts (Literata 400/600/700, Inter 400/500/600) + Tailwind `@layer components` utility classes (`headline-md`, `book-title-card`, `label-md`).
+- Mockups → restyled `login.component`, `register.component`, `list.component` (dashboard), `form.component` (detail-style edit screen) — preserving Angular bindings, replacing only the visual layer.
+- Elevation/shadow tokens → custom `shadow-level-2` / `shadow-level-3` utilities.
+
+What I dropped from the mockups (no backend support): sidebar nav, stats bar, book cover images, reading-status filter chips.
+
 ### Where AI helped
 
 - Scaffolding ceremony — generating boilerplate for `.csproj` references, FluentValidation rule blocks, Swashbuckle bearer config, DbUp wiring, Angular service skeletons.
 - Drafting JWT setup, exception-to-ProblemDetails mapping, and `WebApplicationFactory` Testcontainers fixture wiring.
 - Translating between layers — given a use case, producing the matching DTO record and FluentValidation validator.
-- Translating a Stitch-generated design system (DESIGN.md + 3 mockup HTML files) into Tailwind tokens and restyled Angular components.
+- Translating the Stitch-generated design system (above) into Tailwind tokens and restyled Angular components.
 
 ### What I had to correct or push back on
 
