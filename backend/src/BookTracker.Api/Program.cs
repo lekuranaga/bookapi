@@ -98,6 +98,23 @@ try
     app.UseAuthorization();
     app.MapControllers();
 
+    if (app.Environment.IsDevelopment() && !args.Contains("--no-launch-browser"))
+    {
+        app.Lifetime.ApplicationStarted.Register(() =>
+        {
+            var url = app.Urls.FirstOrDefault(u => u.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+                      ?? app.Urls.FirstOrDefault()
+                      ?? "http://localhost:5184";
+            var target = $"{url.TrimEnd('/')}/scalar/v1";
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo { FileName = target, UseShellExecute = true };
+                System.Diagnostics.Process.Start(psi);
+            }
+            catch (Exception ex) { Log.Warning(ex, "Failed to launch browser at {Url}", target); }
+        });
+    }
+
     app.Run();
 }
 catch (Exception ex)
