@@ -151,13 +151,79 @@ scaffold → domain (tests + entities) → review fixes
 
 ## GenAI tooling — disclosure
 
-Generative AI was used as a coding assistant throughout this exercise. The deliberate workflow:
+I built this exercise inside **Claude Code** (Anthropic's official CLI for Claude) with a customized setup. This section documents both the *setup* (what's loaded into the assistant before any prompt runs) and the *workflow* (how I drove it during this build), then closes with concrete defects I caught in AI-generated code.
+
+### My Claude Code setup
+
+Everything below lives outside the repo, in `~/.claude/` and `~/Developer/`. It conditions the assistant on every session — the assistant doesn't "discover" my preferences each time.
+
+#### Folder layout
+
+```
+~/.claude/
+├── CLAUDE.md            # global personal rules (loaded into every session)
+├── RTK.md               # Rust Token Killer cheatsheet (referenced from CLAUDE.md)
+├── settings.json        # hooks, enabled plugins, status line
+├── hooks/
+│   └── rtk-rewrite.sh   # PreToolUse Bash hook → routes commands through `rtk`
+├── plugins/             # marketplace caches for installed plugins
+└── skills/              # user-defined skills (most live inside plugins now)
+
+~/Developer/
+└── CLAUDE.md            # project-level rules — agent routing table for multi-repo setup
+```
+
+#### CLAUDE.md hierarchy
+
+Claude Code merges CLAUDE.md files top-down: `~/.claude/CLAUDE.md` → `~/Developer/CLAUDE.md` → repo `CLAUDE.md` (if present). My global one enforces a few hard rules: **never create git worktrees, never create branches unless asked, refuse skills/subagents that try to**. The Developer-level one defines an **agent routing table** so non-trivial tasks get dispatched to the right specialist automatically:
+
+| Agent | Model | Use |
+| --- | --- | --- |
+| task-router | opus | classify vague requests, generate briefs |
+| architect | opus | design plans, trade-off analysis |
+| backend-dev | sonnet | implement .NET code |
+| frontend-dev | sonnet | Razor/CSS/JS/Vue/Angular |
+| code-reviewer | opus | PR review, security checks |
+| qa-tester | sonnet | write & run tests |
+| db-specialist | sonnet | migrations, schema, query opt |
+| bug-solver | sonnet | root-cause + minimal fix |
+| prd-writer | opus | translate vague asks into specs |
+| doc-writer | haiku | README, comments, localization |
+
+#### Plugins (`~/.claude/settings.json`)
+
+The Claude Code plugin system lets you install bundles of *skills + agents + commands + hooks* from marketplaces. Active plugins on this machine:
+
+- **superpowers** — adds the meta-skill `using-superpowers` plus a workflow library: `brainstorming`, `writing-plans`, `executing-plans`, `test-driven-development`, `systematic-debugging`, `verification-before-completion`, `requesting-code-review`, `receiving-code-review`. These convert "be thorough" from a wish into rigid checklists the assistant must walk through.
+- **caveman** — the ultra-compressed communication mode you'll see in some of my commits. Drops articles/filler ~75% token savings on prose without losing technical substance. Has intensity levels (`lite`, `full`, `ultra`).
+- **code-review**, **frontend-design**, **figma**, **playwright**, **context7** — domain skills.
+- **dotnet-agent-skills** family (`dotnet`, `dotnet-data`, `dotnet-upgrade`, `dotnet-msbuild`, `dotnet-diag`, `dotnet-ai`, `dotnet-maui`) — official Microsoft skill pack with MSBuild diagnostics, P/Invoke guidance, EF Core query optimization, .NET upgrade migrations, etc.
+- **skill-creator**, **claude-md-management** — meta-tooling for authoring skills and auditing CLAUDE.md files.
+- **ralph-skills** — PRD-to-implementation pipeline.
+
+#### Hooks
+
+`settings.json` registers a `PreToolUse` hook on the `Bash` tool that routes commands through `rtk-rewrite.sh`. **RTK** (Rust Token Killer) is a CLI proxy that filters verbose dev-tool output (git, dotnet, docker) before it reaches the model's context — saves 60-90% of tokens on routine ops with zero behavioral change. The hook does the rewriting transparently; the assistant never sees the wrapping.
+
+#### Skills vs Agents
+
+- **Skills** are stateful procedures the assistant invokes via the `Skill` tool. They expand into instructions that override default behavior (e.g., `superpowers:test-driven-development` mandates write-test-first, no exceptions).
+- **Agents** (subagents) are separate Claude instances spawned via the `Agent` tool with their own context window. I used `frontend-dev` three times in this build (initial Angular scaffold, ESLint/Prettier cleanup, Stitch design system application) and `code-reviewer` once (post-Domain review). Each subagent is briefed cold — its summary returns as a tool result to the main thread, so the heavy work doesn't bloat my window.
+
+### How this exercise was driven
+
+1. **Brainstorming + planning** done in the main thread; agents dispatched for execution work that would either flood my context (Angular setup, design system translation) or benefit from an independent perspective (code review on the Domain layer).
+2. **Caveman mode active** for prose — kept my conversational responses terse. Code/commits/security always written normally.
+3. **Small commits** as a contract: each commit builds + tests pass. The git log mirrors the layered TDD progression and is itself part of the deliverable.
+4. **Skills enforced TDD discipline** — write a test, run it red, implement, run green, commit. The `superpowers:systematic-debugging` skill kicked in twice (DbUp `$2a$` parsing failure, Microsoft.OpenApi namespace migration).
+5. **RTK saved tokens** on dozens of `git status`, `dotnet test`, `docker ps` calls during the build.
 
 ### Where AI helped
 
 - Scaffolding ceremony — generating boilerplate for `.csproj` references, FluentValidation rule blocks, Swashbuckle bearer config, DbUp wiring, Angular service skeletons.
 - Drafting JWT setup, exception-to-ProblemDetails mapping, and `WebApplicationFactory` Testcontainers fixture wiring.
 - Translating between layers — given a use case, producing the matching DTO record and FluentValidation validator.
+- Translating a Stitch-generated design system (DESIGN.md + 3 mockup HTML files) into Tailwind tokens and restyled Angular components.
 
 ### What I had to correct or push back on
 
@@ -175,3 +241,5 @@ These are the recurring failure modes I caught in the AI output and fixed:
 ### What this demonstrates
 
 AI accelerates the typing, not the thinking. Every security-sensitive boundary (auth, persistence, multi-tenant ownership) had a defect in the first AI-generated draft. The test suite — particularly the integration tests with a real Postgres — is what surfaced those defects. The workflow I'd recommend: **prompt for scaffolding, write the integration tests yourself, then let the test failures drive the correction loop.**
+
+The Claude Code setup matters because it shifts AI from "autocomplete on demand" to "team of specialists with shared rules". The global CLAUDE.md is a contract; plugins encode discipline; agents protect context; hooks remove ceremony. The model is still fallible — the value is that the *system around the model* catches more of the failure modes before they reach the diff.
