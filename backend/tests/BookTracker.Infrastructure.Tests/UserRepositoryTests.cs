@@ -30,4 +30,24 @@ public class UserRepositoryTests(PostgresFixture fixture)
         var result = await _sut.FindByEmailAsync(Email.Create($"missing-{Guid.NewGuid():N}@x.com"), CancellationToken.None);
         result.Should().BeNull();
     }
+
+    [Fact]
+    public async Task FindById_RoundTripsUser()
+    {
+        var email = Email.Create($"u{Guid.NewGuid():N}@x.com");
+        var user = User.Register(email, "hash");
+        await _sut.AddAsync(user, CancellationToken.None);
+
+        var fetched = await _sut.FindByIdAsync(user.Id, CancellationToken.None);
+
+        fetched.Should().NotBeNull();
+        fetched!.Id.Should().Be(user.Id);
+    }
+
+    [Fact]
+    public async Task FindById_Missing_ReturnsNull()
+    {
+        var result = await _sut.FindByIdAsync(Guid.NewGuid(), CancellationToken.None);
+        result.Should().BeNull();
+    }
 }

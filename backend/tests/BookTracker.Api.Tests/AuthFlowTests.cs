@@ -73,4 +73,31 @@ public sealed class AuthFlowTests : IAsyncLifetime
         var resp = await client.GetAsync(BooksBase);
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
+
+    [Fact]
+    public async Task InvalidLogin_ReturnsProblemDetails401()
+    {
+        var client = _factory.CreateClient();
+        var resp = await client.PostAsJsonAsync($"{AuthBase}/login",
+            new LoginRequest("missing@example.com", "Wrong@123"));
+
+        resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        resp.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
+        var body = await resp.Content.ReadAsStringAsync();
+        body.Should().Contain("\"traceId\"");
+        body.Should().Contain("Invalid credentials.");
+    }
+
+    [Fact]
+    public async Task ValidationFailure_ReturnsProblemDetails400WithFieldErrors()
+    {
+        var client = _factory.CreateClient();
+        var resp = await client.PostAsJsonAsync($"{AuthBase}/login",
+            new LoginRequest("not-an-email", ""));
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        resp.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
+        var body = await resp.Content.ReadAsStringAsync();
+        body.Should().Contain("\"errors\"");
+    }
 }

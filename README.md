@@ -158,12 +158,39 @@ A guided ~2-minute tour you can use during the live demo:
 cd backend && dotnet test
 ```
 
-- **Domain.Tests** — 29 unit tests, entity invariants
-- **Application.Tests** — 14 unit tests with NSubstitute, use case behavior + auth ownership
-- **Infrastructure.Tests** — 8 integration tests via Testcontainers Postgres, repo round-trips + cross-user isolation
-- **Api.Tests** — 2 end-to-end tests via `WebApplicationFactory` + Testcontainers, register → login → create book flow
+- **Domain.Tests** — 33 unit tests, aggregate invariants + value object equality
+- **Application.Tests** — 17 unit tests with NSubstitute, use case behavior + ownership enforcement + validator failures
+- **Infrastructure.Tests** — 10 integration tests via Testcontainers Postgres (`UserRepository`/`BookRepository` round-trips, cross-user isolation)
+- **Api.Tests** — 4 end-to-end tests via `WebApplicationFactory` + Testcontainers (register → login → CRUD flow, 401 path, ProblemDetails shape, validation error shape)
 
-> 53 tests total. Infrastructure and Api tests need Docker running.
+> **64 tests total.** Infrastructure and Api tests need Docker running.
+
+### Coverage
+
+```bash
+cd backend && dotnet test --settings coverlet.runsettings
+dotnet tool install -g dotnet-reportgenerator-globaltool   # one-time
+reportgenerator -reports:'tests/**/coverage.cobertura.xml' \
+                -targetdir:TestResults/coverage \
+                -reporttypes:'TextSummary;Html'
+open TestResults/coverage/index.html
+```
+
+`coverlet.runsettings` excludes generated code (`Microsoft.AspNetCore.OpenApi.Generated`, source-generated regex, compiler-emitted helpers) and the `Program.cs` composition root + raw `.sql` migrations.
+
+**Current numbers** (per `reportgenerator` summary):
+
+| Assembly | Line | Method |
+| --- | --- | --- |
+| BookTracker.Api | 100% | 100% |
+| BookTracker.Application | 100% | 100% |
+| BookTracker.Infrastructure | 99.x% | 100% |
+| BookTracker.Domain | 95.9% | ~95% |
+| **Total** | **97.5%** | **94.5%** |
+
+The remaining 2.5% line uncovered is split between a couple of auto-property setters on value objects and a `Rating.ToString()` overload nothing currently calls. Branch coverage is 66.6% — most of the missing branches are null-check arms on equality operators (`==`, `!=`) that aren't exercised by the existing tests because they don't compare against `null`.
+
+Not 100%, and chasing the last 2-3% would be tests for code I'd just as soon delete. The Application + Api layers (where business decisions live) are at 100% — that's the meaningful target.
 
 ## API surface
 
@@ -178,6 +205,40 @@ cd backend && dotnet test
 | DELETE | `/api/v1/books/{id}` | JWT | Delete book (owned) |
 
 OpenAPI document at `/openapi/v1.json` and Scalar reference UI at `/scalar/v1`.
+
+### Bruno collection
+
+A native [Bruno](https://www.usebruno.com/) collection lives in [`backend/bruno/`](backend/bruno/). Bruno is an open-source, git-friendly Postman alternative — collections are folders of `.bru` files, not a single JSON export. No import needed if you already have the repo.
+
+**Open the existing collection (recommended):**
+
+1. Install Bruno: `brew install --cask bruno` (or download from usebruno.com).
+2. Bruno → **Open Collection** → pick `backend/bruno`.
+3. Top-right environment selector → choose **Local**.
+4. Run **Auth → Login (demo)**. The post-response script captures the JWT into the `token` env var.
+5. Run any **Books** request — bearer header is injected from `{{token}}`.
+
+**Migrating from Postman?** Bruno → **File → Import** supports Postman v2.1 JSON, Insomnia, OpenAPI, HAR. Drag the file into the import dialog. (Not needed here — the collection is already native Bruno.)
+
+**Layout:**
+
+```
+backend/bruno/
+├── bruno.json                       # collection metadata
+├── README.md
+├── environments/Local.bru           # baseUrl, apiVersion, demo creds, captured token
+├── Auth/
+│   ├── Register.bru                 # random email → token (captured)
+│   └── Login (demo).bru             # demo creds → token (captured)
+└── Books/
+    ├── List.bru
+    ├── Get.bru                      # uses seeded book id
+    ├── Create.bru                   # captures lastBookId
+    ├── Update.bru                   # uses lastBookId
+    └── Delete.bru                   # uses lastBookId
+```
+
+**Suggested chain for demo:** Login → List → Create → Update → Delete. The captured `lastBookId` flows through the last three.
 
 ## TDD workflow
 
